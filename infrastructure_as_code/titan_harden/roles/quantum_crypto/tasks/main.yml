@@ -1,0 +1,39 @@
+---
+- name: Install quantum-resistant crypto packages
+  package:
+    name:
+      - liboqs
+      - openssl-oqs
+      - openssh-oqs
+    state: present
+
+- name: Configure OpenSSL quantum settings
+  copy:
+    dest: /etc/ssl/openssl-q.cnf
+    content: |
+      openssl_conf = openssl_init
+      [openssl_init]
+      providers = provider_sect
+      [provider_sect]
+      default = default_sect
+      [default_sect]
+      activate = 1
+      algorithms = ALL
+      [default_sect]
+      kyber512 = kyber512_sect
+      [kyber512_sect]
+      security_bits = 128
+      [default_sect]
+      dilithium2 = dilithium2_sect
+      [dilithium2_sect]
+      security_bits = 128
+
+- name: Update crypto-policies to FUTURE mode
+  command: update-crypto-policies --set FUTURE
+  args:
+    warn: false
+
+- name: Configure quantum SSH host keys
+  command: ssh-keygen -t ssh-oqs -b 768 -N "" -f /etc/ssh/ssh_host_kyber_key
+  args:
+    creates: /etc/ssh/ssh_host_kyber_key
