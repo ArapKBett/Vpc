@@ -1,0 +1,16 @@
+cat <<EOT > render.yaml
+services:
+  - type: web
+    name: aegis-shield
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    autoDeploy: true
+    envVars:
+      - key: MODEL_THRESHOLD
+        value: 0.97
+      - key: QUANTUM_KEY_ROTATION
+        value: 24h
+    resources:
+      cpu: 2
+      memory: 4GB
+EOT
