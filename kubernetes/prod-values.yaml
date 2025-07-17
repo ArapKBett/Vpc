@@ -1,0 +1,28 @@
+# Kubernetes Production Values
+global:
+  replicaCount: 3
+  imagePullPolicy: Always
+
+neuralSentinel:
+  enabled: true
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+
+quantumNexus:
+  enabled: true
+  ports:
+    - name: pqc-tunnel
+      containerPort: 8443
+      protocol: TCP
+
+oculusSentry:
+  elasticsearch:
+    storage: 100Gi
+  kafka:
+    brokers: 3
