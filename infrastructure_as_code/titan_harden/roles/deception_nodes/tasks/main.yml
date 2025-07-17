@@ -1,0 +1,44 @@
+---
+- name: Install deception packages
+  package:
+    name:
+      - openssh-server
+      - nginx
+      - mysql-server
+      - postgresql
+    state: present
+
+- name: Configure fake SSH service
+  template:
+    src: templates/deception_sshd.j2
+    dest: /etc/ssh/sshd_deception
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Configure fake web service
+  copy:
+    dest: /var/www/html/index.html
+    content: |
+      <html>
+        <head><title>Internal Portal</title></head>
+        <body>
+          <h1>Employee Dashboard</h1>
+          <form action="/login" method="post">
+            Username: <input type="text" name="username"><br>
+            Password: <input type="password" name="password"><br>
+            <input type="submit" value="Login">
+          </form>
+        </body>
+      </html>
+
+- name: Start deception services
+  systemd:
+    name: "{{ item.name }}"
+    state: started
+    enabled: yes
+    masked: no
+  loop:
+    - { name: "sshd@deception", enabled: true }
+    - { name: "nginx", enabled: true }
+    - { name: "mysql", enabled: true }
