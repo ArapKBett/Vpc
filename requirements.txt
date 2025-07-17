@@ -1,0 +1,25 @@
+# Core Requirements
+tensorflow==2.8.0
+keras==2.8.0
+scikit-learn==1.0.2
+pandas==1.4.0
+numpy==1.22.0
+docker==5.0.3
+terraform==1.1.7
+ansible==4.10.0
+python-dotenv==0.19.2
+
+# Security Components
+cryptography==36.0.1
+paramiko==2.10.3
+pyopenssl==22.0.0
+selenium==4.1.0
+
+# Monitoring
+elasticsearch==7.17.0
+kafka-python==2.0.2
+prometheus-client==0.13.1
+
+# Quantum
+pycryptodome==3.14.1
+pqcrypto==0.1.1
