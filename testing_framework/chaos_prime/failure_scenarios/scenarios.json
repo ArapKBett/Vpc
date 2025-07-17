@@ -1,0 +1,36 @@
+[
+  {
+    "id": "net-001",
+    "name": "Network Storm",
+    "description": "Simulate severe network conditions",
+    "actions": [
+      {
+        "name": "latency_injection",
+        "type": "network",
+        "severity": "high"
+      },
+      {
+        "name": "packet_loss",
+        "type": "network",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "id": "comp-001",
+    "name": "Compute Apocalypse",
+    "description": "Random compute node failures",
+    "actions": [
+      {
+        "name": "ec2_termination",
+        "type": "compute",
+        "severity": "critical"
+      },
+      {
+        "name": "docker_kill",
+        "type": "compute",
+        "severity": "high"
+      }
+    ]
+  }
+]
