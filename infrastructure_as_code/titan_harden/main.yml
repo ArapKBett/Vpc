@@ -1,0 +1,128 @@
+---
+- name: Harden Linux servers to Titan standards
+  hosts: all
+  become: true
+  vars:
+    quantum_crypto_enabled: true
+    deception_network: true
+    threat_level: "high"
+    allowed_users: ["secure_admin"]
+    ssh_crypto:
+      kex: "curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256"
+      ciphers: "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+      macs: "hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com"
+
+  pre_tasks:
+    - name: Check if running on supported OS
+      assert:
+        that:
+          - ansible_distribution in ['CentOS', 'RedHat', 'Ubuntu', 'Debian']
+          - ansible_distribution_major_version >= "8"
+        msg: "Unsupported OS/distro version"
+
+  roles:
+    - role: baseline_hardening
+      tags: baseline
+    - role: quantum_crypto
+      when: quantum_crypto_enabled
+      tags: crypto
+    - role: deception_nodes
+      when: deception_network
+      tags: deception
+    - role: network_fortification
+      tags: network
+    - role: monitoring_agents
+      tags: monitoring
+
+  tasks:
+    - name: Install core security packages
+      package:
+        name:
+          - aide
+          - libselinux-utils
+          - auditd
+          - fail2ban
+          - openswan
+          - fipscheck
+        state: present
+      notify:
+        - Enable FIPS mode
+        - Restart auditd
+
+    - name: Configure quantum-resistant SSH
+      template:
+        src: templates/sshd_config.j2
+        dest: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: 0600
+      notify: Restart sshd
+
+    - name: Deploy kernel hardening parameters
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: kernel.kptr_restrict, value: '2' }
+        - { name: kernel.dmesg_restrict, value: '1' }
+        - { name: kernel.yama.ptrace_scope, value: '2' }
+        - { name: net.ipv4.tcp_syncookies, value: '1' }
+        - { name: net.ipv4.conf.all.rp_filter, value: '1' }
+
+    - name: Configure auditd for Titan monitoring
+      template:
+        src: templates/auditd.conf.j2
+        dest: /etc/audit/auditd.conf
+        owner: root
+        group: root
+        mode: 0640
+      notify: Restart auditd
+
+    - name: Deploy quantum crypto policies
+      copy:
+        dest: /etc/crypto-policies/back-ends/opensshserver.config
+        content: |
+          CRYPTO_POLICY='-oKexAlgorithms={{ ssh_crypto.kex }} -oCiphers={{ ssh_crypto.ciphers }} -oMACs={{ ssh_crypto.macs }}'
+        owner: root
+        group: root
+        mode: 0600
+      when: quantum_crypto_enabled
+
+    - name: Configure deception service
+      include_role:
+        name: deception_nodes
+        tasks_from: deploy_decoy
+      when: deception_network
+
+  post_tasks:
+    - name: Run final security checks
+      command: /usr/sbin/aide --check
+      changed_when: false
+      ignore_errors: true
+
+    - name: Generate Titan compliance report
+      template:
+        src: templates/compliance_report.j2
+        dest: /var/log/titan_compliance.log
+        owner: root
+        group: root
+        mode: 0600
+
+  handlers:
+    - name: Restart sshd
+      service:
+        name: sshd
+        state: restarted
+        enabled: yes
+
+    - name: Restart auditd
+      service:
+        name: auditd
+        state: restarted
+        enabled: yes
+
+    - name: Enable FIPS mode
+      command: fips-mode-setup --enable
+      when: ansible_distribution in ['CentOS', 'RedHat']
