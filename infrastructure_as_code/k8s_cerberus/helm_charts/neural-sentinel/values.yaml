@@ -1,0 +1,44 @@
+replicaCount: 3
+
+image:
+  repository: "quantumsecure/neural-sentinel"
+  tag: "2.4.0"
+  pullPolicy: "Always"
+
+resources:
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+  requests:
+    cpu: "1"
+    memory: "2Gi"
+
+config:
+  modelPath: "/models/quantum_ids_v3.h5"
+  threshold: 0.95
+  kafkaBrokers: "kafka.cerberus.svc.cluster.local:9092"
+  topics:
+    - "network-flows"
+    - "pod-logs"
+    - "kube-audit"
+
+volumes:
+  - name: models
+    persistentVolumeClaim:
+      claimName: "ids-models-pvc"
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: "app"
+              operator: "In"
+              values: ["neural-sentinel"]
+        topologyKey: "kubernetes.io/hostname"
+
+tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "security"
+    effect: "NoSchedule"
