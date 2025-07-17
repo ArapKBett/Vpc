@@ -129,24 +129,269 @@ kubectl top pods -n security
 
 [Official Kubernetes Documentation](https://kubernetes.io/docs/home/)  
 [Render Deployment Guide](https://render.com/docs/deploy-docker)
+
+
+### Key Additions
+
+
+```![Project Banner](https://example.com/path/to/banner.jpg) *[Optional banner image]*
+
+**Codename:** AEGIS-SHIELD  
+**Version:** 4.0  
+**Project Type:** Quantum-Resistant Network Security Platform  
+
+## Table of Contents
+1. [System Overview](#system-overview)
+2. [Local Deployment](#local-deployment)
+   - [Prerequisites](#prerequisites)
+   - [Installation](#installation)
+   - [Configuration](#configuration)
+   - [Running the System](#running-the-system)
+3. [Online Hosting](#online-hosting)
+   - [AWS Deployment](#aws-deployment)
+   - [Docker Deployment](#docker-deployment)
+   - [Kubernetes Deployment](#kubernetes-deployment)
+4. [Testing](#testing)
+5. [Maintenance](#maintenance)
+6. [Troubleshooting](#troubleshooting)
+
+## System Overview
+
+AEGIS-SHIELD is a multi-layered security system featuring:
+- Quantum-resistant encryption (Kyber768)
+- AI-powered intrusion detection
+- Automated penetration testing
+- Deceptive honeypot networks
+- Real-time threat intelligence
+
+## Local Deployment
+
+### Prerequisites
+
+**Hardware Requirements:**
+- Minimum: 4 CPU cores, 8GB RAM, 50GB SSD
+- Recommended: 8+ CPU cores, 16GB RAM, 100GB NVMe SSD
+
+**Software Requirements:**
+```bash
+# For Ubuntu/Debian
+sudo apt update && sudo apt install -y \
+    python3.9 python3-pip docker.io terraform ansible \
+    build-essential libssl-dev libffi-dev python3-dev \
+    git jq
+
+# For CentOS/RHEL
+sudo yum install -y python39 python39-pip docker terraform ansible \
+    gcc openssl-devel libffi-devel python3-devel \
+    git jq
 ```
 
----
+### Installation
 
-### Key Additions:
-1. **Render-Specific Files**:
-   - `render.yaml` for service configuration
-   - `Dockerfile.render` optimized for Render's platform
+1. Clone the repository:
+```bash
+git clone https://github.com/your-repo/AEGIS-SHIELD.git
+cd AEGIS-SHIELD
+```
 
-2. **Kubernetes Deep Dive**:
-   - Cluster creation commands for all major cloud providers
-   - Helm installation with production values
-   - Auto-scaling configurations
+2. Set up Python virtual environment:
+```bash
+python3.9 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip wheel
+```
 
-3. **Troubleshooting**:
-   - Platform-specific debugging commands
-   - Direct links to official documentation
+3. Install dependencies:
+```bash
+# Core dependencies
+pip install -r requirements.txt
 
-4. **Maintenance Procedures**:
-   - Render scaling commands
-   - Kubernetes upgrade workflows
+# AI/ML components
+pip install tensorflow==2.8.0 keras==2.8.0 scikit-learn==1.0.2
+
+# Infrastructure components
+terraform init
+```
+
+### Configuration
+
+1. Set up environment variables:
+```bash
+cp .env.example .env
+nano .env  # Edit with your configuration
+```
+
+2. Initialize databases:
+```bash
+# For threat intelligence database
+sqlite3 monitoring/threat_horizon/ioc_database/threats.db < monitoring/threat_horizon/ioc_database/schema.sql
+
+# For SIEM storage
+docker-compose -f monitoring/oculus_sentry/elasticsearch.yml up -d
+```
+
+3. Generate cryptographic keys:
+```bash
+cd security_controls/quantum_nexus
+python key_manager.py generate-keys
+```
+
+### Running the System
+
+Start components in order:
+
+1. Infrastructure layer:
+```bash
+cd infrastructure_as_code
+terraform apply -auto-approve
+ansible-playbook -i inventory.ini playbook.yml
+```
+
+2. Security controls:
+```bash
+# In separate terminals
+cd security_controls/quantum_nexus && go run pqc_tunnel.go
+cd security_controls/neural_sentinel && python ids_engine.py
+cd security_controls/phantom_maze && python honeypot_cluster.py
+```
+
+3. Monitoring systems:
+```bash
+cd monitoring/oculus_sentry && python siem_core.py
+cd monitoring/threat_horizon && python feed_processor.py
+```
+
+## Online Hosting
+
+### AWS Deployment
+
+1. Set up AWS credentials:
+```bash
+aws configure
+terraform apply -var="aws_region=us-east-1" -var="instance_type=t3.xlarge"
+```
+
+2. Deployment script (`deploy_aws.sh`):
+```bash
+#!/bin/bash
+# Initialize infrastructure
+terraform init -backend-config="bucket=aegis-shield-tfstate" \
+               -backend-config="key=prod/terraform.tfstate"
+
+# Deploy components
+terraform apply -var="environment=prod" \
+                -var="vpc_id=vpc-123456" \
+                -auto-approve
+
+# Configure instances
+ansible-playbook -i aws_ec2.yml playbook.yml
+```
+
+### Docker Deployment
+
+1. Build containers:
+```bash
+docker-compose -f docker-compose.prod.yml build
+```
+
+2. Deployment script (`deploy_docker.sh`):
+```bash
+#!/bin/bash
+# Pull latest images
+docker-compose -f docker-compose.prod.yml pull
+
+# Start services
+docker-compose -f docker-compose.prod.yml up -d --scale neural_sentinel=3
+
+# Initialize databases
+docker-compose -f docker-compose.prod.yml exec oculus_sentry \
+    python init_db.py
+```
+
+### Kubernetes Deployment
+
+1. Helm chart installation:
+```bash
+helm install aegis-shield kubernetes/aegis-shield \
+    --namespace security \
+    --values kubernetes/prod-values.yaml
+```
+
+2. Kubernetes deployment script (`deploy_k8s.sh`):
+```bash
+#!/bin/bash
+# Apply configurations
+kubectl apply -f kubernetes/namespace.yaml
+kubectl apply -f kubernetes/secrets/
+kubectl apply -f kubernetes/configmaps/
+
+# Deploy components
+helm upgrade --install aegis-shield kubernetes/aegis-shield \
+    --namespace security \
+    --set replicaCount=3 \
+    --set neuralSentinel.enabled=true
+```
+
+## Testing
+
+Run the test suite:
+```bash
+# Unit tests
+python -m pytest tests/unit
+
+# Integration tests
+python -m pytest tests/integration --host=localhost --port=8000
+
+# Security tests
+cd testing_framework/red_ops
+python exploit_scanner.py --target=127.0.0.1 --level=full
+```
+
+## Maintenance
+
+Update procedure:
+```bash
+# 1. Pull updates
+git pull origin main
+
+# 2. Update dependencies
+pip install -r requirements.txt --upgrade
+
+# 3. Restart services
+docker-compose -f docker-compose.prod.yml restart
+
+# 4. Verify
+curl -X GET http://localhost:8080/healthcheck
+```
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Quantum Nexus failing to start**:
+```bash
+# Check key permissions
+chmod 600 security_controls/quantum_nexus/*.key
+
+# Verify ports
+netstat -tulnp | grep 8443
+```
+
+2. **Neural Sentinel training failure**:
+```bash
+# Check dataset path
+ls -lh security_controls/neural_sentinel/data/
+
+# Verify GPU availability
+nvidia-smi  # For GPU acceleration
+```
+
+3. **SIEM not processing events**:
+```bash
+# Check Elasticsearch health
+curl -X GET "localhost:9200/_cluster/health?pretty"
+
+# Verify Kafka topics
+docker-compose -f monitoring/oculus_sentry/kafka.yml exec kafka \
+    kafka-topics --list --bootstrap-server localhost:9092
+```
