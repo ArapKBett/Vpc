@@ -1,0 +1,19 @@
+id: "LM-001"
+name: "Lateral Movement Detection"
+description: "Detects suspicious internal host scanning"
+severity: "critical"
+threshold: 10
+timeframe: 10  # minutes
+conditions:
+  - field: "event.action"
+    type: "equals"
+    value: "port_scan"
+  - field: "source.ip"
+    type: "regex"
+    pattern: "^10\\."
+  - field: "destination.ip"
+    type: "regex"
+    pattern: "^10\\."
+actions:
+  - type: "isolate_host"
+  - type: "alert_forensics"
