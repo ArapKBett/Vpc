@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  neural-sentinel:
+    build: ./security_controls/neural_sentinel
+    ports:
+      - "5000:5000"
+    environment:
+      - MODEL_PATH=/models/sentinel_x_model.h5
+    volumes:
+      - ./security_controls/neural_sentinel/data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+
+  quantum-nexus:
+    build: ./security_controls/quantum_nexus
+    ports:
+      - "8443:8443"
+    environment:
+      - KEY_PATH=/keys
+    volumes:
+      - ./security_controls/quantum_nexus/keys:/keys
+
+  oculus-sentry:
+    build: ./monitoring/oculus_sentry
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    depends_on:
+      - elasticsearch
+      - kafka
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.2.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+
+  kafka:
+    image: bitnami/kafka:3.1
+    environment:
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
