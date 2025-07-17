@@ -1,0 +1,44 @@
+---
+- name: Remove insecure packages
+  package:
+    name:
+      - telnet
+      - rsh
+      - ypbind
+      - tftp
+    state: absent
+
+- name: Disable unnecessary services
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  loop:
+    - rpcbind
+    - avahi-daemon
+    - cups
+    - nfs
+
+- name: Configure secure umask
+  lineinfile:
+    path: /etc/profile
+    regexp: '^umask'
+    line: 'umask 027'
+    insertafter: EOF
+
+- name: Set account password policies
+  pamd:
+    name: system-auth
+    type: password
+    control: 'required'
+    module_path: 'pam_pwquality.so'
+    module_arguments: 'try_first_pass retry=3 minlen=14 dcredit=-1 ucredit=-1 ocredit=-1 lcredit=-1 enforce_for_root'
+
+- name: Configure session timeout
+  blockinfile:
+    path: /etc/profile.d/timeout.sh
+    create: yes
+    block: |
+      TMOUT=900
+      readonly TMOUT
+      export TMOUT
