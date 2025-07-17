@@ -1,0 +1,16 @@
+id: "BF-001"
+name: "Brute Force Attack Detection"
+description: "Detects multiple failed authentication attempts"
+severity: "high"
+threshold: 5
+timeframe: 5  # minutes
+conditions:
+  - field: "event.type"
+    type: "equals"
+    value: "authentication_failure"
+  - field: "source.ip"
+    type: "regex"
+    pattern: "^[0-9]{1,3}\\."
+actions:
+  - type: "block_ip"
+  - type: "alert_soc"
