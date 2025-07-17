@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "name": "AlienVault OTX",
+      "url": "https://otx.alienvault.com/api/v1/indicators/export",
+      "type": "ip",
+      "format": "json"
+    },
+    {
+      "name": "FireEye Threat Feed",
+      "url": "https://api.threatfeeds.io/feed.fireeye",
+      "type": "domain",
+      "format": "stix2"
+    },
+    {
+      "name": "Emerging Threats IP List",
+      "url": "https://rules.emergingthreats.net/blockrules/compromised-ips.txt",
+      "type": "ip",
+      "format": "text"
+    }
+  ]
+}
